@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>notterminal.shop</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: #000;
+      }
+      #terminal {
+        width: 100%;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="terminal"></div>
+    <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const term = new Terminal({
+        cursorBlink: true,
+        scrollback: 1000,
+        theme: {
+          background: "#131313",
+        },
+      });
+      term.open(document.getElementById("terminal"));
+      const socket = io();
+
+      socket.on("data", function (data) {
+        term.write(data);
+      });
+
+      term.onData((data) => {
+        socket.emit("data", data);
+      });
+
+      function resizeTerminal() {
+        const cols = Math.floor(window.innerWidth / 9); // Approximation of char width in px
+        const rows = Math.floor(window.innerHeight / 17); // Approximation of char height in px
+        term.resize(cols, rows);
+        socket.emit("resize", { cols, rows });
+      }
+
+      window.addEventListener("resize", resizeTerminal);
+      resizeTerminal(); // Initial resize
+    </script>
+  </body>
+</html>
